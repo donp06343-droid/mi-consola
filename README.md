@@ -1,4 +1,4 @@
-# Mi Consola
+# Mi Consola v5 (Modular)
 
 Lanzador a pantalla completa + centro de descargas de juegos (emuladores + PC).
 
@@ -6,10 +6,30 @@ Lanzador a pantalla completa + centro de descargas de juegos (emuladores + PC).
 
 - Frontend de emulacion (NES, SNES, N64, PS1, PS2, Switch, etc.)
 - Lanzador de juegos de PC (Steam, Epic, carpetas genericas)
-- **Portadas automaticas** (Steam CDN + Libretro Thumbnails)
+- **Portadas automaticas mejoradas** (Steam CDN + Libretro + matching inteligente)
 - Favoritos, busqueda, ordenamiento
 - Centro de descargas + tienda de juegos gratis/legales
 - Controles configurables (teclado + gamepad)
+- Lobby con estrellas parallax
+
+## Estructura modular
+
+```
+mi-consola/
+├── main.py              # Punto de entrada
+├── config.py            # Rutas, colores, sistemas, emuladores
+├── covers.py            # Sistema de portadas (mejorado)
+├── library.py           # Escaneo de biblioteca + favoritos
+├── launcher.py          # Lanzamiento de juegos/emuladores
+├── downloads.py         # Cola de descargas
+├── store.py             # Tienda + resolver de enlaces
+├── controls.py          # Controles teclado/joystick
+├── ui/
+│   ├── stars.py         # Campo de estrellas
+│   └── cards.py         # Tarjetas de juegos
+├── requirements.txt
+└── README.md
+```
 
 ## Requisitos
 
@@ -22,24 +42,10 @@ pip install pywebview
 ## Uso
 
 ```bash
-python consola.py
+python main.py
 ```
 
-La carpeta base por defecto es `D:\\Emulacion`.
-
-## Estructura recomendada
-
-```
-D:\\Emulacion\\
-├── Juegos\\
-│   ├── NES\\
-│   ├── SNES\\
-│   ├── PS1\\
-│   └── ...
-├── Covers\\          # Portadas (se llenan solas)
-├── emulators\\
-└── consola.py
-```
+La carpeta base por defecto es `D:\\Emulacion` (configurable con `MI_CONSOLA_BASE`).
 
 ## Teclas principales
 
@@ -54,8 +60,17 @@ D:\\Emulacion\\
 | T | Tienda |
 | R | Re-escanear |
 | C | Controles |
+| M | Spotify |
 | Esc | Volver / Salir |
 
-## Version actual
+## Mejoras v5 (portadas)
 
-v4.1 - Sistema de portadas automaticas
+- Matching de nombres mas inteligente (ignora regiones, codigos, articulos)
+- Score de similitud para elegir la mejor imagen local
+- Prioridad clara: Steam cache → Covers/ → junto a ROM → descarga
+- Placeholders mas limpios
+- Descarga concurrente controlada
+
+## Version
+
+v5.0-modular
