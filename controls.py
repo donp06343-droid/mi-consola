@@ -28,6 +28,7 @@ ACCIONES = [
     ("buscar",   "Buscar"),
     ("ordenar",  "Cambiar orden"),
     ("spotify",  "Abrir Spotify"),
+    ("sistema",  "Estado del sistema"),
 ]
 
 TECLAS_DEFECTO = {
@@ -49,6 +50,7 @@ TECLAS_DEFECTO = {
     "buscar": ["slash", "f3"],
     "ordenar": ["o"],
     "spotify": ["m"],
+    "sistema": ["e"],  # E = Estado del sistema
 }
 
 JOY_DEFECTO = {
