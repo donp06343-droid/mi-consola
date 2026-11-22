@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 
 NOMBRE = "Mi Consola"
-VERSION = "5.0-modular"
+VERSION = "5.2-emuladores"
 
 BASE = os.environ.get("MI_CONSOLA_BASE", r"D:\Emulacion")
 
@@ -70,11 +70,11 @@ EMU_DEFECTO = {
     "GB":    [os.path.join(BASE, "emulators", "bgb", "bgb.exe"), "{rom}"],
     "GBA":   [os.path.join(BASE, "emulators", "mGBA", "mGBA.exe"), "{rom}"],
     "NDS":   [os.path.join(BASE, "emulators", "melonDS", "melonDS.exe"), "{rom}"],
-    "3DS":   [os.path.join(BASE, "emulators", "citra", "citra-qt.exe"), "{rom}"],
+    "3DS":   [os.path.join(BASE, "emulators", "azahar", "azahar.exe"), "{rom}"],
     "GC":    [os.path.join(BASE, "emulators", "dolphin", "Dolphin.exe"), "-e", "{rom}"],
     "Wii":   [os.path.join(BASE, "emulators", "dolphin", "Dolphin.exe"), "-e", "{rom}"],
     "WiiU":  [os.path.join(BASE, "emulators", "cemu", "Cemu.exe"), "-g", "{rom}"],
-    "Switch":[os.path.join(BASE, "emulators", "ryujinx", "Ryujinx.exe"), "{rom}"],
+    "Switch":[os.path.join(BASE, "emulators", "eden", "eden.exe"), "{rom}"],
     "PS1":   [os.path.join(BASE, "emulators", "duckstation", "duckstation-qt-x64-ReleaseLTCG.exe"), "{rom}"],
     "PS2":   [os.path.join(BASE, "emulators", "pcsx2", "pcsx2-qt.exe"), "{rom}"],
     "PS3":   [os.path.join(BASE, "emulators", "rpcs3", "rpcs3.exe"), "{rom}"],
@@ -86,6 +86,54 @@ EMU_DEFECTO = {
     "MegaDrive": [os.path.join(BASE, "emulators", "gens", "gens.exe"), "{rom}"],
     "Arcade": [os.path.join(BASE, "emulators", "mame", "mame.exe"), "{rom}"],
     "Xbox":   [os.path.join(BASE, "emulators", "xemu", "xemu.exe"), "{rom}"],
+}
+
+# Rutas alternativas si el nombre del .exe o la carpeta difieren (NO VERIFICADO nombres exactos dentro de zips)
+EMU_ALTERNATIVAS = {
+    "3DS": [
+        os.path.join(BASE, "emulators", "azahar", "azahar.exe"),
+        os.path.join(BASE, "emulators", "citra", "citra-qt.exe"),
+        os.path.join(BASE, "emulators", "lime3ds", "lime3ds.exe"),
+    ],
+    "Switch": [
+        os.path.join(BASE, "emulators", "eden", "eden.exe"),
+        os.path.join(BASE, "emulators", "ryujinx", "Ryujinx.exe"),
+        os.path.join(BASE, "emulators", "ryubing", "Ryujinx.exe"),
+    ],
+    "PS1": [
+        os.path.join(BASE, "emulators", "duckstation", "duckstation-qt-x64-ReleaseLTCG.exe"),
+        os.path.join(BASE, "emulators", "duckstation", "duckstation-qt-x64-Release.exe"),
+        os.path.join(BASE, "emulators", "duckstation", "duckstation.exe"),
+    ],
+    "PS2": [
+        os.path.join(BASE, "emulators", "pcsx2", "pcsx2-qt.exe"),
+        os.path.join(BASE, "emulators", "pcsx2", "pcsx2.exe"),
+    ],
+    "PS3": [
+        os.path.join(BASE, "emulators", "rpcs3", "rpcs3.exe"),
+    ],
+    "PS4": [
+        os.path.join(BASE, "shadPS4", "shadPS4.exe"),
+    ],
+    "PSP": [
+        os.path.join(BASE, "emulators", "ppsspp", "PPSSPPWindows64.exe"),
+        os.path.join(BASE, "emulators", "ppsspp", "PPSSPPWindows.exe"),
+    ],
+    "GBA": [
+        os.path.join(BASE, "emulators", "mGBA", "mGBA.exe"),
+    ],
+    "NDS": [
+        os.path.join(BASE, "emulators", "melonDS", "melonDS.exe"),
+    ],
+    "GC": [
+        os.path.join(BASE, "emulators", "dolphin", "Dolphin.exe"),
+    ],
+    "Wii": [
+        os.path.join(BASE, "emulators", "dolphin", "Dolphin.exe"),
+    ],
+    "WiiU": [
+        os.path.join(BASE, "emulators", "cemu", "Cemu.exe"),
+    ],
 }
 
 LIBRETRO_SISTEMAS = {

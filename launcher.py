@@ -8,8 +8,37 @@ import sys
 import subprocess
 import webbrowser
 
-from config import BASE, CFG, EMU_DEFECTO
+from config import BASE, CFG, EMU_DEFECTO, EMU_ALTERNATIVAS
 from library import _es_rom_valida
+
+
+def _resolver_exe(sis: str, cfg: dict | None = None) -> str | None:
+    """Devuelve la ruta real del .exe del emulador si existe, o None.
+    Orden: cfg del usuario -> EMU_DEFECTO -> EMU_ALTERNATIVAS.
+    No lanza excepciones (falla con gracia).
+    """
+    try:
+        cfg = cfg or {}
+        cmd = cfg.get(sis) or EMU_DEFECTO.get(sis)
+        if cmd:
+            p = cmd[0]
+            if p and os.path.exists(p):
+                return p
+        for p in EMU_ALTERNATIVAS.get(sis, []):
+            if p and os.path.exists(p):
+                return p
+        # Ultimo recurso: primer .exe en la carpeta del defecto (si existe)
+        if cmd and cmd[0]:
+            carpeta = os.path.dirname(cmd[0])
+            if carpeta and os.path.isdir(carpeta):
+                for nombre in os.listdir(carpeta):
+                    if nombre.lower().endswith(".exe"):
+                        full = os.path.join(carpeta, nombre)
+                        if os.path.isfile(full):
+                            return full
+    except Exception:
+        return None
+    return None
 
 
 def jugar(sis: str, ruta: str, cfg: dict) -> str:
@@ -68,18 +97,17 @@ def jugar(sis: str, ruta: str, cfg: dict) -> str:
         return ""
 
     # Emuladores
-    cmd = cfg.get(sis) or cfg.get("Retro")
+    cmd = list(cfg.get(sis) or EMU_DEFECTO.get(sis) or cfg.get("Retro") or [])
     if not cmd:
         return f"No hay emulador configurado para {sis}. Edita {CFG}"
 
-    exe_path = cmd[0]
-    if not os.path.exists(exe_path):
-        retro = cfg.get("Retro", EMU_DEFECTO.get("Retro", [""]))[0]
-        if os.path.exists(retro) and sis != "PS4":
-            cmd = [retro]
-            exe_path = retro
-        else:
-            return f"Falta el emulador de {sis}:\n{exe_path}\n\nInstalalo en esa ruta o edita {CFG}"
+    exe_path = _resolver_exe(sis, cfg)
+    if not exe_path:
+        esperado = cmd[0]
+        return f"Falta el emulador de {sis}:\n{esperado}\n\nInstalalo en esa ruta, usa Tienda (T) o edita {CFG}"
+
+    # Reconstruir cmd con el exe encontrado
+    cmd = [exe_path] + list(cmd[1:]) if cmd else [exe_path, "{rom}"]
 
     rom = ruta
     if os.path.isdir(ruta):
