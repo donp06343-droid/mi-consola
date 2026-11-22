@@ -21,7 +21,9 @@ ACCIONES = [
     ("pegar",    "Pegar enlaces"),
     ("dest",     "Cambiar destino"),
     ("pausa",    "Pausar descarga"),
-    ("quitar",   "Quitar de cola"),
+    ("quitar",   "Quitar / cancelar descarga"),
+    ("limite",   "Limite de velocidad"),
+    ("limpiar",  "Limpiar completadas"),
     ("rescan",   "Re-escanear PC"),
     ("controles","Menu Controles"),
     ("favorito", "Marcar favorito"),
@@ -29,7 +31,6 @@ ACCIONES = [
     ("ordenar",  "Cambiar orden"),
     ("spotify",  "Abrir Spotify"),
     ("shadps4",  "Abrir GUI shadPS4 (PKG)"),
-    ("sistema",  "Estado del sistema"),
 ]
 
 TECLAS_DEFECTO = {
@@ -45,6 +46,8 @@ TECLAS_DEFECTO = {
     "dest": ["s"],
     "pausa": ["p"],
     "quitar": ["delete"],
+    "limite": ["l"],
+    "limpiar": ["x"],
     "rescan": ["r"],
     "controles": ["c"],
     "favorito": ["f"],
@@ -52,7 +55,6 @@ TECLAS_DEFECTO = {
     "ordenar": ["o"],
     "spotify": ["m"],
     "shadps4": ["g"],
-    "sistema": ["e"],
 }
 
 JOY_DEFECTO = {
