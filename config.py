@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 
 NOMBRE = "Mi Consola"
-VERSION = "5.2-emuladores"
+VERSION = "5.3-descargas"
 
 BASE = os.environ.get("MI_CONSOLA_BASE", r"D:\Emulacion")
 
@@ -88,52 +88,12 @@ EMU_DEFECTO = {
     "Xbox":   [os.path.join(BASE, "emulators", "xemu", "xemu.exe"), "{rom}"],
 }
 
-# Rutas alternativas si el nombre del .exe o la carpeta difieren (NO VERIFICADO nombres exactos dentro de zips)
+# Si el emulador configurado no existe, el launcher prueba estos (en orden).
 EMU_ALTERNATIVAS = {
-    "3DS": [
-        os.path.join(BASE, "emulators", "azahar", "azahar.exe"),
-        os.path.join(BASE, "emulators", "citra", "citra-qt.exe"),
-        os.path.join(BASE, "emulators", "lime3ds", "lime3ds.exe"),
-    ],
-    "Switch": [
-        os.path.join(BASE, "emulators", "eden", "eden.exe"),
-        os.path.join(BASE, "emulators", "ryujinx", "Ryujinx.exe"),
-        os.path.join(BASE, "emulators", "ryubing", "Ryujinx.exe"),
-    ],
-    "PS1": [
-        os.path.join(BASE, "emulators", "duckstation", "duckstation-qt-x64-ReleaseLTCG.exe"),
-        os.path.join(BASE, "emulators", "duckstation", "duckstation-qt-x64-Release.exe"),
-        os.path.join(BASE, "emulators", "duckstation", "duckstation.exe"),
-    ],
-    "PS2": [
-        os.path.join(BASE, "emulators", "pcsx2", "pcsx2-qt.exe"),
-        os.path.join(BASE, "emulators", "pcsx2", "pcsx2.exe"),
-    ],
-    "PS3": [
-        os.path.join(BASE, "emulators", "rpcs3", "rpcs3.exe"),
-    ],
-    "PS4": [
-        os.path.join(BASE, "shadPS4", "shadPS4.exe"),
-    ],
-    "PSP": [
-        os.path.join(BASE, "emulators", "ppsspp", "PPSSPPWindows64.exe"),
-        os.path.join(BASE, "emulators", "ppsspp", "PPSSPPWindows.exe"),
-    ],
-    "GBA": [
-        os.path.join(BASE, "emulators", "mGBA", "mGBA.exe"),
-    ],
-    "NDS": [
-        os.path.join(BASE, "emulators", "melonDS", "melonDS.exe"),
-    ],
-    "GC": [
-        os.path.join(BASE, "emulators", "dolphin", "Dolphin.exe"),
-    ],
-    "Wii": [
-        os.path.join(BASE, "emulators", "dolphin", "Dolphin.exe"),
-    ],
-    "WiiU": [
-        os.path.join(BASE, "emulators", "cemu", "Cemu.exe"),
-    ],
+    "3DS": [("emulators", "azahar", "azahar.exe"), ("emulators", "lime3ds", "lime3ds.exe"),
+            ("emulators", "citra", "citra-qt.exe")],
+    "Switch": [("emulators", "eden", "eden.exe"), ("emulators", "ryubing", "Ryujinx.exe"),
+               ("emulators", "ryujinx", "Ryujinx.exe")],
 }
 
 LIBRETRO_SISTEMAS = {
