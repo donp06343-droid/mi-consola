@@ -1,5 +1,5 @@
 pygame>=2.5.0
 # Opcional para ventana de tienda integrada:
 # pywebview>=4.0
-# Opcional para extraer .7z de emuladores (PCSX2, RPCS3, mGBA):
+# Opcional para extraer .7z (PCSX2, RPCS3, mGBA):
 py7zr>=0.20
