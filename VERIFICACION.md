@@ -66,6 +66,16 @@ Las comprobaciones anteriores verifican que esos nombres aparecen en la API de r
 - Ryubing: NO VERIFICADO en esta tarea. No se fija un asset ni se afirma compatibilidad de ejecutables.
 - La instalación automática desde la tienda no se declara verificada para ninguno de los dos.
 
+### Endurecimiento adicional de descargas (22-11-2026)
+
+- Los nombres locales derivados de URLs se limpian para impedir separadores y caracteres de control.
+- La cola solo acepta URLs HTTP/HTTPS.
+- Un ZIP/7z no se marca como listo si la extracción falla o no deja archivos.
+- La lista de elementos completados registra la carpeta extraída (o el archivo descargado), no la ruta del comprimido que se elimina.
+- La extracción 7z valida también los nombres de directorios normales antes de extraer.
+
+**Pruebas:** cambios revisados en el código fuente; ejecución de pruebas automatizadas y validación real en Windows: **NO VERIFICADO**.
+
 ### Extracción
 - ZIP y 7z se extraen en un directorio temporal/destino, aplanando una única carpeta raíz.
 - Se rechazan rutas absolutas, unidades y segmentos \`..\`; se usa \`os.path.commonpath\` en vez de comparar prefijos de texto.
