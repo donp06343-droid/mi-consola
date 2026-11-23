@@ -7,7 +7,7 @@ from downloads import nombre_archivo, _ruta_segura
 
 class DownloadSafetyTests(unittest.TestCase):
     def test_filename_removes_windows_path_and_invalid_characters(self):
-        name = nombre_archivo("https://example.test/files/../../bad:name?.zip", 0)
+        name = nombre_archivo("https://example.test/files/../../bad:name%3F.zip", 0)
         self.assertNotIn("/", name)
         self.assertNotIn("\\", name)
         self.assertNotIn(":", name)
