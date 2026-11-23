@@ -7,11 +7,12 @@ import sys
 import time
 import threading
 import webbrowser
+import json
 
 import pygame
 
 from config import (
-    NOMBRE, BASE, JUEGOS, DESTINOS,
+    NOMBRE, BASE, JUEGOS, CFG, DESTINOS,
     FONDO, PANEL, PANEL2, TEXTO, SUAVE, AZUL, VERDE, ROJO, DORADO, CIAN,
 )
 from library import (
@@ -91,7 +92,7 @@ def main():
     reloj = pygame.time.Clock()
 
     vista, sel, sel_d, dest_i, aviso = "inicio", 0, 0, 0, ""
-    sel_t = sel_c = 0
+    sel_t = sel_c = sel_ajustes = 0
     esperando = None
     COLS = 5
     estrellas = Estrellas(1280, 720, 140)
@@ -116,6 +117,56 @@ def main():
         nonlocal aviso, t_aviso
         aviso = msg
         t_aviso = time.time() + dur
+
+    def ejecutar_ajuste(indice):
+        if indice in (0, 1):
+            ruta = BASE if indice == 0 else JUEGOS
+            try:
+                os.makedirs(ruta, exist_ok=True)
+                if sys.platform == "win32":
+                    os.startfile(ruta)
+                else:
+                    webbrowser.open("file://" + os.path.abspath(ruta))
+                set_aviso("Abriendo carpeta...")
+            except Exception as e:
+                set_aviso(f"No se pudo abrir la carpeta: {e}")
+        elif indice == 2:
+            try:
+                import tkinter
+                from tkinter import filedialog
+                raiz = tkinter.Tk()
+                raiz.withdraw()
+                carpeta = filedialog.askdirectory(title="Seleccionar carpeta que contiene juegos de PC")
+                raiz.destroy()
+                if not carpeta:
+                    set_aviso("Seleccion cancelada")
+                    return
+                try:
+                    with open(CFG, "r", encoding="utf-8") as archivo:
+                        datos = json.load(archivo)
+                except Exception:
+                    datos = {}
+                if not isinstance(datos, dict):
+                    datos = {}
+                carpetas = datos.get("carpetas_pc", [])
+                if not isinstance(carpetas, list):
+                    carpetas = []
+                carpeta = os.path.abspath(carpeta)
+                if carpeta not in carpetas:
+                    carpetas.append(carpeta)
+                datos["carpetas_pc"] = carpetas
+                os.makedirs(os.path.dirname(CFG), exist_ok=True)
+                temporal = CFG + ".tmp"
+                with open(temporal, "w", encoding="utf-8") as archivo:
+                    json.dump(datos, archivo, ensure_ascii=False, indent=2)
+                os.replace(temporal, CFG)
+                detectar_pc(forzar=True)
+                set_aviso("Carpeta agregada. Escaneando juegos...")
+            except Exception as e:
+                set_aviso(f"No se pudo agregar la carpeta: {e}")
+        elif indice == 3:
+            detectar_pc(forzar=True)
+            set_aviso("Re-escaneo de juegos de PC iniciado")
 
     def resolver_tecla(key_const):
         nombre = key_to_name(key_const)
@@ -163,19 +214,29 @@ def main():
                 init_joysticks()
             if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
                 mx, my = e.pos
+                if vista == "ajustes":
+                    acciones = [(70, 165, 560, 90), (650, 165, 560, 90),
+                                (70, 280, 560, 90), (650, 280, 560, 90)]
+                    for idx, (ax, ay, aw, ah) in enumerate(acciones):
+                        if ax <= mx <= ax + aw and ay <= my <= ay + ah:
+                            ejecutar_ajuste(idx)
+                            break
                 if 34 <= my <= 68:
                     tabs = [
-                        (410, 505, "inicio"),
-                        (510, 605, "tienda"),
-                        (610, 705, "descargas"),
-                        (710, 805, "estado"),
-                        (810, 905, "controles"),
+                        (390, 475, "inicio"),
+                        (480, 565, "tienda"),
+                        (570, 655, "descargas"),
+                        (660, 745, "estado"),
+                        (750, 835, "controles"),
+                        (840, 925, "ajustes"),
                     ]
                     for x1, x2, destino in tabs:
                         if x1 <= mx <= x2:
                             vista = destino
                             if destino == "estado":
                                 t_estado = 0
+                            if destino == "ajustes":
+                                sel_ajustes = 0
                             continue
 
             if modo_busqueda:
@@ -259,6 +320,10 @@ def main():
                 vista = "estado"
                 t_estado = 0
                 continue
+            if tecla == "ajustes":
+                vista = "ajustes"
+                sel_ajustes = 0
+                continue
             if tecla == "controles":
                 vista = "controles"
                 sel_c = 0
@@ -302,7 +367,7 @@ def main():
                 guardar_favoritos(favoritos)
                 filtrar_y_ordenar()
             elif tecla == "atras":
-                if vista in ("descargas", "tienda", "controles", "estado"):
+                if vista in ("descargas", "tienda", "controles", "estado", "ajustes"):
                     vista = "inicio"
                     esperando = None
                 else:
@@ -321,6 +386,13 @@ def main():
                     msg = jugar(j[0], j[2], cfg, j[1])
                     if msg:
                         set_aviso(msg)
+            elif vista == "ajustes":
+                if tecla in ("i", "a"):
+                    sel_ajustes = max(0, sel_ajustes - 1)
+                if tecla in ("d", "b"):
+                    sel_ajustes = min(3, sel_ajustes + 1)
+                if tecla == "ok":
+                    ejecutar_ajuste(sel_ajustes)
             elif vista == "tienda":
                 if tecla == "a":
                     sel_t = max(0, sel_t - 1)
@@ -400,11 +472,12 @@ def main():
             txt("Sin gamepad", f_mini, SUAVE, 1040, 28)
         txt("Spotify", f_mini, (30, 215, 96), 920, 28)
         nav_tabs = [
-            (410, 505, "INICIO", "inicio"),
-            (510, 605, "TIENDA", "tienda"),
-            (610, 705, "DESCARGAS", "descargas"),
-            (710, 805, "ESTADO", "estado"),
-            (810, 905, "AJUSTES", "controles"),
+            (390, 475, "INICIO", "inicio"),
+            (480, 565, "TIENDA", "tienda"),
+            (570, 655, "DESCARGAS", "descargas"),
+            (660, 745, "ESTADO", "estado"),
+            (750, 835, "MANDO", "controles"),
+            (840, 925, "AJUSTES", "ajustes"),
         ]
         for x1, x2, etiqueta, destino in nav_tabs:
             activo = vista == destino
@@ -468,7 +541,7 @@ def main():
                     es_fav = clave_juego(sis, nom) in favoritos
                     txt("* Favorito" if es_fav else "F = marcar favorito", f_mini, DORADO if es_fav else SUAVE, 995, 600)
 
-            pie = "Enter jugar  F favorito  / buscar  O ordenar  T tienda  Tab descargas  E estado PC  C controles  R escanear  Esc salir"
+            pie = "Enter jugar  F favorito  / buscar  O ordenar  T tienda  Tab descargas  E estado  U ajustes  C mando  R escanear"
             if modo_busqueda:
                 pygame.draw.rect(pantalla, (30, 20, 50), (40, 650, 1200, 40), border_radius=8)
                 txt(f"Buscar: {texto_busqueda}_", f_med, DORADO, 55, 658)
@@ -542,6 +615,36 @@ def main():
                     txt(f"{i + 1}. {juego.get('nombre', 'Juego')[:30]} · {minutos} min",
                         f_mini, SUAVE, 60, 574 + i * 22)
             pie = "E / Esc volver   ·   R re-escanear biblioteca   ·   T tienda   ·   C controles"
+
+
+        elif vista == "ajustes":
+            txt("Ajustes de Mi Consola", f_tit, TEXTO, 55, 82)
+            txt("Configura las carpetas que Mi Consola revisa para encontrar tus juegos.", f_peq, SUAVE, 58, 125)
+            opciones = [
+                ("ABRIR CARPETA BASE", BASE, "Ver emuladores, herramientas y datos de Mi Consola"),
+                ("ABRIR BIBLIOTECA", JUEGOS, "Abrir la carpeta donde guardas ROMs y juegos"),
+                ("AGREGAR CARPETA DE PC", "Seleccionar una carpeta", "Incluir otra ubicacion al escaneo automatico"),
+                ("VOLVER A ESCANEAR", "Biblioteca de PC", "Buscar instalaciones nuevas en las carpetas configuradas"),
+            ]
+            for i, (titulo, valor, detalle) in enumerate(opciones):
+                x = 70 + (i % 2) * 580
+                y = 165 + (i // 2) * 115
+                rr = pygame.Rect(x, y, 560, 90)
+                pygame.draw.rect(pantalla, PANEL2 if i == sel_ajustes else PANEL, rr, border_radius=12)
+                pygame.draw.rect(pantalla, AZUL if i == sel_ajustes else (45, 70, 110), rr, 2, border_radius=12)
+                txt(titulo, f_med, TEXTO, x + 18, y + 12)
+                txt(valor[:52], f_mini, CIAN, x + 18, y + 40)
+                txt(detalle[:70], f_mini, SUAVE, x + 18, y + 64)
+            try:
+                with open(CFG, "r", encoding="utf-8") as archivo:
+                    carpetas_extra = json.load(archivo).get("carpetas_pc", [])
+                if not isinstance(carpetas_extra, list):
+                    carpetas_extra = []
+            except Exception:
+                carpetas_extra = []
+            txt(f"Carpetas PC adicionales configuradas: {len(carpetas_extra)}", f_mini, SUAVE, 75, 420)
+            txt(f"Archivo de configuracion: {CFG}", f_mini, SUAVE, 75, 448)
+            pie = "Flechas mover · Enter ejecutar · C mando · E estado · Esc volver"
 
         elif vista == "tienda":
             txt("Tienda  .  juegos gratis y legales", f_med, TEXTO, 55, 85)
