@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 
 NOMBRE = "Mi Consola"
-VERSION = "5.3-descargas"
+VERSION = "5.4-tiendas"
 
 BASE = os.environ.get("MI_CONSOLA_BASE", r"D:\Emulacion")
 
@@ -88,7 +88,6 @@ EMU_DEFECTO = {
     "Xbox":   [os.path.join(BASE, "emulators", "xemu", "xemu.exe"), "{rom}"],
 }
 
-# Si el emulador configurado no existe, el launcher prueba estos (en orden).
 EMU_ALTERNATIVAS = {
     "3DS": [("emulators", "azahar", "azahar.exe"), ("emulators", "lime3ds", "lime3ds.exe"),
             ("emulators", "citra", "citra-qt.exe")],
