@@ -23,7 +23,7 @@ def nombre_archivo(url, n):
     if nombre in ("", ".", ".."):
         nombre = f"archivo_{n}"
     # Evitar separadores y caracteres no válidos en nombres de Windows.
-    nombre = re.sub(r'[<>:"/\\\\|?*\\x00-\\x1f]', "_", nombre).strip(" .")
+    nombre = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", nombre).strip(" .")
     return nombre or f"archivo_{n}"
 
 
