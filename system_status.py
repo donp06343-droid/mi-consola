@@ -57,3 +57,46 @@ def lista_estado_emuladores(cfg=None):
     except Exception:
         pass
     return filas
+
+
+
+def obtener_estado_pc():
+    """Devuelve metricas reales del equipo; los sensores no disponibles se omiten."""
+    import platform
+    import shutil
+    datos = {
+        "sistema": f"{platform.system()} {platform.release()}",
+        "equipo": platform.node() or "PC",
+        "cpu": platform.processor() or "CPU no identificada",
+        "nucleos": os.cpu_count() or 0,
+        "ram_total": 0,
+        "ram_usada": 0,
+        "ram_pct": None,
+        "cpu_pct": None,
+        "disco_total": 0,
+        "disco_libre": 0,
+        "disco_pct": None,
+        "gpu": "No disponible en esta lectura",
+        "temperatura": "Sensor no disponible",
+    }
+    try:
+        import psutil
+        datos["cpu_pct"] = psutil.cpu_percent(interval=None)
+        memoria = psutil.virtual_memory()
+        datos["ram_total"] = memoria.total
+        datos["ram_usada"] = memoria.used
+        datos["ram_pct"] = memoria.percent
+        raiz = os.path.abspath(os.sep)
+        disco = psutil.disk_usage(raiz)
+        datos["disco_total"] = disco.total
+        datos["disco_libre"] = disco.free
+        datos["disco_pct"] = disco.percent
+    except Exception:
+        try:
+            disco = shutil.disk_usage(os.path.abspath(os.sep))
+            datos["disco_total"] = disco.total
+            datos["disco_libre"] = disco.free
+            datos["disco_pct"] = round((disco.used / disco.total) * 100, 1) if disco.total else None
+        except Exception:
+            pass
+    return datos
