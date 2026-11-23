@@ -305,75 +305,7 @@ def main():
                     msg = jugar(j[0], j[2], cfg, j[1])
                     if msg:
                         set_aviso(msg)
-            elif vista == "estado":
-            if ahora - t_estado > 2.0:
-                estado_pc = obtener_estado_pc()
-                emus_estado = lista_estado_emuladores(cfg)
-                stats_resumen = resumen_estadisticas()
-                t_estado = ahora
-
-            txt("Estado del equipo", f_tit, TEXTO, 55, 82)
-            txt("Diagnostico local · metricas disponibles en este dispositivo", f_peq, SUAVE, 58, 125)
-
-            def tarjeta_estado(x, y, w, h, titulo, valor, detalle, color):
-                rr = pygame.Rect(x, y, w, h)
-                pygame.draw.rect(pantalla, PANEL, rr, border_radius=12)
-                pygame.draw.rect(pantalla, color, rr, 2, border_radius=12)
-                txt(titulo, f_mini, SUAVE, x + 14, y + 12)
-                txt(valor, f_tit, color, x + 14, y + 34)
-                txt(detalle, f_mini, TEXTO, x + 14, y + h - 25)
-
-            def gb(valor):
-                return f"{valor / (1024 ** 3):.1f} GB" if valor else "No disponible"
-
-            cpu = estado_pc.get("cpu_pct")
-            ram = estado_pc.get("ram_pct")
-            disco = estado_pc.get("disco_pct")
-            tarjeta_estado(55, 155, 270, 112, "PROCESADOR", f"{cpu:.0f}%" if cpu is not None else "N/D",
-                           f"{estado_pc.get('nucleos', 0)} nucleos · {estado_pc.get('cpu', '')[:24]}",
-                           CIAN)
-            tarjeta_estado(345, 155, 270, 112, "MEMORIA RAM", f"{ram:.0f}%" if ram is not None else "N/D",
-                           f"{gb(estado_pc.get('ram_usada'))} / {gb(estado_pc.get('ram_total'))}", VERDE)
-            tarjeta_estado(635, 155, 270, 112, "ALMACENAMIENTO", f"{disco:.0f}%" if disco is not None else "N/D",
-                           f"{gb(estado_pc.get('disco_libre'))} libres", DORADO)
-            tarjeta_estado(925, 155, 300, 112, "BIBLIOTECA", str(len(juegos)),
-                           f"{len(favoritos)} favoritos · {len({j[0] for j in juegos})} sistemas", AZUL)
-
-            txt("INFORMACION DEL SISTEMA", f_peq, DORADO, 60, 292)
-            txt(estado_pc.get("sistema", "Sistema no identificado"), f_med, TEXTO, 60, 320)
-            txt(f"Equipo: {estado_pc.get('equipo', 'PC')}", f_mini, SUAVE, 60, 350)
-            txt(f"GPU: {estado_pc.get('gpu', 'No disponible')}", f_mini, SUAVE, 60, 374)
-            txt(f"Temperatura: {estado_pc.get('temperatura', 'No disponible')}", f_mini, SUAVE, 60, 398)
-
-            txt(f"EMULADORES · {sum(1 for e in emus_estado if e['instalado'])}/{len(emus_estado)} detectados",
-                f_peq, DORADO, 650, 292)
-            for i, emu in enumerate(emus_estado[:8]):
-                col, fila = i // 4, i % 4
-                x, y = 650 + col * 285, 320 + fila * 42
-                ok = emu["instalado"]
-                pygame.draw.rect(pantalla, PANEL if ok else (38, 28, 42),
-                                 (x, y, 270, 34), border_radius=7)
-                pygame.draw.circle(pantalla, VERDE if ok else ROJO, (x + 13, y + 17), 5)
-                txt(emu["nombre"][:28], f_mini, TEXTO, x + 26, y + 9)
-            if len(emus_estado) > 8:
-                txt(f"+{len(emus_estado) - 8} emuladores en catalogo", f_mini, SUAVE, 650, 500)
-
-            activos = sum(1 for d in cola if d.get("estado") in ("en cola", "bajando"))
-            completadas = sum(1 for d in cola if d.get("estado") == "listo")
-            txt(f"Descargas: {activos} activas · {completadas} completadas", f_mini, SUAVE, 60, 475)
-            horas = stats_resumen.get("segundos", 0) / 3600
-            txt(f"ESTADISTICAS DE JUEGO: {stats_resumen.get('lanzamientos', 0)} lanzamientos · "
-                f"{stats_resumen.get('juegos', 0)} juegos iniciados · {horas:.1f} horas registradas",
-                f_peq, CIAN, 60, 515)
-            top_juegos = stats_resumen.get("top", [])
-            if top_juegos:
-                txt("MAS JUGADOS POR TIEMPO", f_mini, DORADO, 60, 550)
-                for i, juego in enumerate(top_juegos[:3]):
-                    minutos = int(float(juego.get("segundos", 0)) // 60)
-                    txt(f"{i + 1}. {juego.get('nombre', 'Juego')[:30]} · {minutos} min",
-                        f_mini, SUAVE, 60, 574 + i * 22)
-            pie = "E / Esc volver   ·   R re-escanear biblioteca   ·   T tienda   ·   C controles"
-        elif vista == "tienda":
+            elif vista == "tienda":
                 if tecla == "a":
                     sel_t = max(0, sel_t - 1)
                 if tecla == "b":
@@ -511,6 +443,76 @@ def main():
             if modo_busqueda:
                 pygame.draw.rect(pantalla, (30, 20, 50), (40, 650, 1200, 40), border_radius=8)
                 txt(f"Buscar: {texto_busqueda}_", f_med, DORADO, 55, 658)
+
+
+        elif vista == "estado":
+            if ahora - t_estado > 2.0:
+                estado_pc = obtener_estado_pc()
+                emus_estado = lista_estado_emuladores(cfg)
+                stats_resumen = resumen_estadisticas()
+                t_estado = ahora
+
+            txt("Estado del equipo", f_tit, TEXTO, 55, 82)
+            txt("Diagnostico local · metricas disponibles en este dispositivo", f_peq, SUAVE, 58, 125)
+
+            def tarjeta_estado(x, y, w, h, titulo, valor, detalle, color):
+                rr = pygame.Rect(x, y, w, h)
+                pygame.draw.rect(pantalla, PANEL, rr, border_radius=12)
+                pygame.draw.rect(pantalla, color, rr, 2, border_radius=12)
+                txt(titulo, f_mini, SUAVE, x + 14, y + 12)
+                txt(valor, f_tit, color, x + 14, y + 34)
+                txt(detalle, f_mini, TEXTO, x + 14, y + h - 25)
+
+            def gb(valor):
+                return f"{valor / (1024 ** 3):.1f} GB" if valor else "No disponible"
+
+            cpu = estado_pc.get("cpu_pct")
+            ram = estado_pc.get("ram_pct")
+            disco = estado_pc.get("disco_pct")
+            tarjeta_estado(55, 155, 270, 112, "PROCESADOR", f"{cpu:.0f}%" if cpu is not None else "N/D",
+                           f"{estado_pc.get('nucleos', 0)} nucleos · {estado_pc.get('cpu', '')[:24]}",
+                           CIAN)
+            tarjeta_estado(345, 155, 270, 112, "MEMORIA RAM", f"{ram:.0f}%" if ram is not None else "N/D",
+                           f"{gb(estado_pc.get('ram_usada'))} / {gb(estado_pc.get('ram_total'))}", VERDE)
+            tarjeta_estado(635, 155, 270, 112, "ALMACENAMIENTO", f"{disco:.0f}%" if disco is not None else "N/D",
+                           f"{gb(estado_pc.get('disco_libre'))} libres", DORADO)
+            tarjeta_estado(925, 155, 300, 112, "BIBLIOTECA", str(len(juegos)),
+                           f"{len(favoritos)} favoritos · {len({j[0] for j in juegos})} sistemas", AZUL)
+
+            txt("INFORMACION DEL SISTEMA", f_peq, DORADO, 60, 292)
+            txt(estado_pc.get("sistema", "Sistema no identificado"), f_med, TEXTO, 60, 320)
+            txt(f"Equipo: {estado_pc.get('equipo', 'PC')}", f_mini, SUAVE, 60, 350)
+            txt(f"GPU: {estado_pc.get('gpu', 'No disponible')}", f_mini, SUAVE, 60, 374)
+            txt(f"Temperatura: {estado_pc.get('temperatura', 'No disponible')}", f_mini, SUAVE, 60, 398)
+
+            txt(f"EMULADORES · {sum(1 for e in emus_estado if e['instalado'])}/{len(emus_estado)} detectados",
+                f_peq, DORADO, 650, 292)
+            for i, emu in enumerate(emus_estado[:8]):
+                col, fila = i // 4, i % 4
+                x, y = 650 + col * 285, 320 + fila * 42
+                ok = emu["instalado"]
+                pygame.draw.rect(pantalla, PANEL if ok else (38, 28, 42),
+                                 (x, y, 270, 34), border_radius=7)
+                pygame.draw.circle(pantalla, VERDE if ok else ROJO, (x + 13, y + 17), 5)
+                txt(emu["nombre"][:28], f_mini, TEXTO, x + 26, y + 9)
+            if len(emus_estado) > 8:
+                txt(f"+{len(emus_estado) - 8} emuladores en catalogo", f_mini, SUAVE, 650, 500)
+
+            activos = sum(1 for d in cola if d.get("estado") in ("en cola", "bajando"))
+            completadas = sum(1 for d in cola if d.get("estado") == "listo")
+            txt(f"Descargas: {activos} activas · {completadas} completadas", f_mini, SUAVE, 60, 475)
+            horas = stats_resumen.get("segundos", 0) / 3600
+            txt(f"ESTADISTICAS DE JUEGO: {stats_resumen.get('lanzamientos', 0)} lanzamientos · "
+                f"{stats_resumen.get('juegos', 0)} juegos iniciados · {horas:.1f} horas registradas",
+                f_peq, CIAN, 60, 515)
+            top_juegos = stats_resumen.get("top", [])
+            if top_juegos:
+                txt("MAS JUGADOS POR TIEMPO", f_mini, DORADO, 60, 550)
+                for i, juego in enumerate(top_juegos[:3]):
+                    minutos = int(float(juego.get("segundos", 0)) // 60)
+                    txt(f"{i + 1}. {juego.get('nombre', 'Juego')[:30]} · {minutos} min",
+                        f_mini, SUAVE, 60, 574 + i * 22)
+            pie = "E / Esc volver   ·   R re-escanear biblioteca   ·   T tienda   ·   C controles"
 
         elif vista == "tienda":
             txt("Tienda  .  juegos gratis y legales", f_med, TEXTO, 55, 85)
