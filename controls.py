@@ -31,6 +31,7 @@ ACCIONES = [
     ("ordenar",  "Cambiar orden"),
     ("spotify",  "Abrir Spotify"),
     ("shadps4",  "Abrir GUI shadPS4 (PKG)"),
+    ("estado",   "Estado y estadisticas del PC"),
 ]
 
 TECLAS_DEFECTO = {
@@ -55,6 +56,7 @@ TECLAS_DEFECTO = {
     "ordenar": ["o"],
     "spotify": ["m"],
     "shadps4": ["g"],
+    "estado": ["e"],
 }
 
 JOY_DEFECTO = {
