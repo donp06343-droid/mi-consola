@@ -9,9 +9,30 @@ import time
 import string
 import threading
 
-from config import BASE, JUEGOS, CFG, DESTINOS, EXT_ROM, FAVORITOS_CFG
+from config import BASE, JUEGOS, CFG, DESTINOS, EXT_ROM, FAVORITOS_CFG, EMU_DEFECTO
 import ps4
 import stores
+
+
+def cargar_cfg():
+    """Carga los comandos de emulador del usuario y completa con los valores por defecto."""
+    cfg = {sistema: list(comando) for sistema, comando in EMU_DEFECTO.items()}
+    try:
+        if os.path.isfile(CFG):
+            with open(CFG, encoding="utf-8") as archivo:
+                personalizada = json.load(archivo)
+            if isinstance(personalizada, dict):
+                for sistema, comando in personalizada.items():
+                    if (
+                        isinstance(sistema, str)
+                        and isinstance(comando, list)
+                        and comando
+                        and all(isinstance(arg, str) for arg in comando)
+                    ):
+                        cfg[sistema] = comando
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError) as error:
+        print(f"No se pudo cargar {CFG}; se usan los emuladores por defecto: {error}")
+    return cfg
 
 
 def cargar_favoritos():
@@ -130,8 +151,8 @@ def _buscar_generico(vistos):
         extra = []
     candidatos, carpetas_juegos = [], list(extra)
 
-    for pf in (os.environ.get("ProgramFiles", r"C:\Program Files"),
-               os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)")):
+    for pf in (os.environ.get("ProgramFiles", r"C:\\Program Files"),
+               os.environ.get("ProgramFiles(x86)", r"C:\\Program Files (x86)")):
         if os.path.isdir(pf):
             try:
                 candidatos += [e.path for e in os.scandir(pf) if e.is_dir()]
