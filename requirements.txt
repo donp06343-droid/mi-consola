@@ -1,5 +1,2 @@
 pygame>=2.5.0
-# Opcional para ventana de tienda integrada:
-# pywebview>=4.0
-# Opcional para .7z:
 py7zr>=0.20
