@@ -132,7 +132,11 @@ def _extraer_7z(arc_path, destino):
             with py7zr.SevenZipFile(arc_path, mode="r") as z:
                 # Validar todos los nombres antes de extraer: el temporal también
                 # debe quedar protegido frente a miembros con rutas externas.
-                if any(_ruta_segura(tmp, name) is None for name in z.getnames()):
+                nombres = [
+                    name.rstrip("/\\\\") for name in z.getnames()
+                    if name.rstrip("/\\\\")
+                ]
+                if any(_ruta_segura(tmp, name) is None for name in nombres):
                     raise RuntimeError("El archivo 7z contiene rutas no permitidas")
                 z.extractall(path=tmp)
         else:
