@@ -78,7 +78,7 @@ def main():
 
     pantalla = pygame.display.set_mode((1280, 720), pygame.SCALED | pygame.FULLSCREEN)
     pygame.display.set_caption(NOMBRE)
-    pygame.mouse.set_visible(False)
+    pygame.mouse.set_visible(True)
 
     f_tit = pygame.font.SysFont("segoeui", 38, bold=True)
     f_med = pygame.font.SysFont("segoeui", 22)
@@ -161,6 +161,22 @@ def main():
                 return
             if e.type in (pygame.JOYDEVICEADDED, pygame.JOYDEVICEREMOVED):
                 init_joysticks()
+            if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
+                mx, my = e.pos
+                if 34 <= my <= 68:
+                    tabs = [
+                        (410, 505, "inicio"),
+                        (510, 605, "tienda"),
+                        (610, 705, "descargas"),
+                        (710, 805, "estado"),
+                        (810, 905, "controles"),
+                    ]
+                    for x1, x2, destino in tabs:
+                        if x1 <= mx <= x2:
+                            vista = destino
+                            if destino == "estado":
+                                t_estado = 0
+                            continue
 
             if modo_busqueda:
                 if e.type == pygame.KEYDOWN:
@@ -383,6 +399,19 @@ def main():
         else:
             txt("Sin gamepad", f_mini, SUAVE, 1040, 28)
         txt("Spotify", f_mini, (30, 215, 96), 920, 28)
+        nav_tabs = [
+            (410, 505, "INICIO", "inicio"),
+            (510, 605, "TIENDA", "tienda"),
+            (610, 705, "DESCARGAS", "descargas"),
+            (710, 805, "ESTADO", "estado"),
+            (810, 905, "AJUSTES", "controles"),
+        ]
+        for x1, x2, etiqueta, destino in nav_tabs:
+            activo = vista == destino
+            nr = pygame.Rect(x1, 36, x2 - x1, 28)
+            pygame.draw.rect(pantalla, PANEL2 if activo else PANEL, nr, border_radius=7)
+            pygame.draw.rect(pantalla, AZUL if activo else (45, 70, 110), nr, 1, border_radius=7)
+            txt(etiqueta, f_mini, TEXTO if activo else SUAVE, nr.centerx, nr.y + 6, True)
 
         activas = [i for i in cola if i["estado"] in ("bajando", "en cola")]
         if activas and vista == "inicio":
@@ -526,8 +555,15 @@ def main():
                 pygame.draw.rect(pantalla, PANEL if n != sel_t else PANEL2, r, border_radius=12)
                 if n == sel_t:
                     pygame.draw.rect(pantalla, AZUL, r, 3, border_radius=12)
-                txt(j["n"], f_med, TEXTO, 70, y + 10)
-                txt(j["d"][:90], f_peq, SUAVE, 70, y + 42)
+                tile = pygame.Rect(62, y + 8, 60, 60)
+                hue = sum(ord(ch) for ch in j["n"]) % 360
+                tile_color = pygame.Color(0)
+                tile_color.hsva = (hue, 58, 58, 100)
+                pygame.draw.rect(pantalla, tile_color, tile, border_radius=9)
+                inicial = f_med.render(j["n"][:1].upper(), True, TEXTO)
+                pantalla.blit(inicial, inicial.get_rect(center=tile.center))
+                txt(j["n"], f_med, TEXTO, 138, y + 10)
+                txt(j["d"][:90], f_peq, SUAVE, 138, y + 42)
                 if j.get("pago"):
                     etiqueta, color_e = "Comprar", DORADO
                 elif j.get("dl") or j.get("repo"):
