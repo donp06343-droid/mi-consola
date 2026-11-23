@@ -48,7 +48,10 @@ def registrar_lanzamiento(sistema, nombre, proceso=None):
         })
         item["lanzamientos"] = int(item.get("lanzamientos", 0)) + 1
         item["ultima_vez"] = int(inicio)
-        _guardar(data)
+        try:
+            _guardar(data)
+        except OSError:
+            pass
 
     if proceso is not None:
         def esperar_y_sumar():
@@ -62,7 +65,10 @@ def registrar_lanzamiento(sistema, nombre, proceso=None):
                 registro = actual.setdefault("juegos", {}).get(clave)
                 if registro is not None:
                     registro["segundos"] = float(registro.get("segundos", 0.0)) + duracion
-                    _guardar(actual)
+                    try:
+                        _guardar(actual)
+                    except OSError:
+                        pass
         threading.Thread(target=esperar_y_sumar, daemon=True).start()
 
 
