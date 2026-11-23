@@ -10,6 +10,7 @@ import webbrowser
 
 from config import BASE, CFG, EMU_DEFECTO, EMU_ALTERNATIVAS
 from library import _es_rom_valida
+from stats import registrar_lanzamiento
 
 
 def _resolver_exe(sis: str, cfg: dict | None = None) -> str | None:
@@ -41,13 +42,14 @@ def _resolver_exe(sis: str, cfg: dict | None = None) -> str | None:
     return None
 
 
-def jugar(sis: str, ruta: str, cfg: dict) -> str:
+def jugar(sis: str, ruta: str, cfg: dict, nombre: str | None = None) -> str:
     """
     Lanza el juego/emulador.
     Devuelve string vacio si todo ok, o mensaje de error.
     """
     # Steam protocol
     if ruta.startswith("steam://"):
+        registrar_lanzamiento(sis, nombre or "Juego Steam")
         try:
             if sys.platform == "win32":
                 os.startfile(ruta)
@@ -91,7 +93,8 @@ def jugar(sis: str, ruta: str, cfg: dict) -> str:
             exe = candidatos[0][1]
         try:
             cwd = os.path.dirname(exe) or None
-            subprocess.Popen([exe], cwd=cwd)
+            proceso = subprocess.Popen([exe], cwd=cwd)
+            registrar_lanzamiento(sis, nombre or os.path.basename(exe), proceso)
         except Exception as e:
             return f"Error al lanzar: {e}"
         return ""
@@ -133,7 +136,8 @@ def jugar(sis: str, ruta: str, cfg: dict) -> str:
 
     try:
         cwd = os.path.dirname(exe_path) or None
-        subprocess.Popen(args, cwd=cwd)
+        proceso = subprocess.Popen(args, cwd=cwd)
+        registrar_lanzamiento(sis, nombre or os.path.basename(rom), proceso)
     except Exception as e:
         return f"Error al lanzar {sis}: {e}"
     return ""
