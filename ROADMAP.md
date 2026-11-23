@@ -1,26 +1,41 @@
-# Roadmap - Mi Consola
+# Roadmap — Mi Consola
 
-Meta: pasar de un launcher a un **sistema de consola** (PC) y luego a una **consola fisica**.
+Objetivo: convertir Mi Consola en una experiencia de consola para PC, manteniendo una base segura y recuperable.
 
-## Fase 1 - Launcher completo (actual, v5.x)
-- [x] Biblioteca, portadas, favoritos, tienda con categorias
-- [x] Modo kiosk (Capa 1)
-- [x] shadPS4: instalar, detectar, lanzar
-- [x] Instalador generico de emuladores (+ .7z) - v5.2 (falta probar en PC real)
-- [x] Pantalla de estado del sistema (tecla E)
-- [ ] Tests + CI
-- [ ] Navegacion total con mando
+## Fase 1 — Frontend unificado
 
-## Fase 2 - Consola OS en PC
-- [ ] Arranque directo al launcher (reemplazo de shell de Windows) con recuperacion
-- [ ] Autoarranque, login automatico, energia (suspender/apagar desde el menu)
-- [ ] Actualizaciones automaticas desde GitHub (con rollback)
-- [ ] Ajustes de sistema desde la UI: wifi, bluetooth, audio, resolucion
-- [ ] Instalador / USB booteable
-- [ ] Evaluar base Linux ligera (Steam Deck style) vs Windows kiosk
+- [x] Lobby a pantalla completa.
+- [x] Navegación por teclado y soporte de gamepad configurable.
+- [x] Pestañas clicables con mouse.
+- [x] Biblioteca local, búsqueda, favoritos y ordenamiento.
+- [x] Portadas locales y descarga automática de Steam/Libretro con placeholders.
+- [x] Detección de juegos de PC y tiendas compatibles según el sistema.
+- [x] Lanzamiento de juegos y emuladores desde la biblioteca.
+- [x] Tienda curada de software libre/gratuito y emuladores.
+- [x] Descargas HTTP/HTTPS y extracción ZIP/7z con validación de rutas.
+- [x] Ajustes para abrir carpetas y añadir ubicaciones de juegos de PC.
+- [x] Panel de estado con métricas reales disponibles y detección de emuladores.
+- [x] Estadísticas locales de lanzamientos y tiempo de ejecución.
+- [ ] Pruebas automatizadas y ejecución completa en Windows real.
+- [ ] Mejorar la navegación por mando en todas las ventanas y diálogos nativos.
+- [ ] Mejorar la ficha de cada juego con metadatos y arte de más fuentes verificadas.
+- [ ] Catálogo amplio de metadatos (separado de la biblioteca instalada/local).
 
-## Fase 3 - Consola fisica
-- [ ] Definir hardware objetivo (mini-PC / SBC) y requisitos para PS2/PS3/Switch/PS4
-- [ ] Imagen de sistema reproducible
-- [ ] Controles, refrigeracion, carcasa
-- [ ] Licencias: solo software libre/legal, sin BIOS/firmware/juegos incluidos
+## Fase 2 — Consola OS en PC
+
+- [ ] Arranque directo al launcher con mecanismo de recuperación.
+- [ ] Autoarranque configurable y gestión segura de energía.
+- [ ] Actualizaciones desde GitHub con verificación y rollback.
+- [ ] Ajustes de Windows/Linux para audio, resolución, red y mandos.
+- [ ] Instalador USB o modo kiosk documentado y reversible.
+
+## Fase 3 — Consola física
+
+- [ ] Definir hardware objetivo y requisitos de rendimiento.
+- [ ] Imagen reproducible del sistema.
+- [ ] Controles, refrigeración y carcasa.
+- [ ] Respetar licencias: no incluir juegos, BIOS, firmware ni claves protegidas.
+
+## Alcance importante
+
+Mi Consola integra los emuladores como frontend: los detecta, organiza sus juegos y los inicia desde una interfaz común. Los emuladores siguen siendo programas independientes porque cada proyecto tiene su propio código, dependencias, licencia y requisitos. La tienda no distribuye juegos comerciales ni archivos protegidos.

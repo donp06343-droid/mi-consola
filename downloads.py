@@ -2,6 +2,7 @@
 Mi Consola - Cola de descargas
 """
 import os
+import re
 import shutil
 import time
 import zipfile
@@ -16,7 +17,14 @@ cola = []
 
 
 def nombre_archivo(url, n):
-    return os.path.basename(urllib.parse.unquote(urllib.parse.urlparse(url).path)) or f"archivo_{n}"
+    """Obtiene un nombre local seguro a partir de una URL no confiable."""
+    raw = urllib.parse.unquote(urllib.parse.urlparse(url).path)
+    nombre = os.path.basename(raw.replace("\\", "/"))
+    if nombre in ("", ".", ".."):
+        nombre = f"archivo_{n}"
+    # Evitar separadores y caracteres no válidos en nombres de Windows.
+    nombre = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", nombre).strip(" .")
+    return nombre or f"archivo_{n}"
 
 
 def soporte_7z():
@@ -42,36 +50,54 @@ def soporte_7z():
     return False, None
 
 
+def _ruta_segura(destino, rel):
+    """Devuelve una ruta dentro de destino o None si el miembro intenta salir."""
+    import ntpath
+    rel = str(rel).replace("\\", "/")
+    if not rel or rel.startswith("/") or ntpath.isabs(rel):
+        return None
+    if re.match(r"^[a-zA-Z]:", rel):
+        return None
+    partes = rel.split("/")
+    if any(p in ("", ".", "..") for p in partes):
+        return None
+    base = os.path.realpath(destino)
+    out = os.path.realpath(os.path.join(base, *partes))
+    try:
+        if os.path.commonpath((base, out)) != base:
+            return None
+    except (ValueError, OSError):
+        return None
+    return out
+
+
 def _extraer_plano(zip_path, destino):
-    """Extrae el zip en destino. Si todo viene dentro de UNA carpeta raiz,
-    la quita para que el .exe quede directamente en destino."""
+    """Extrae ZIP de forma segura y aplana una única carpeta raíz."""
+    os.makedirs(destino, exist_ok=True)
     with zipfile.ZipFile(zip_path) as z:
-        nombres = [n for n in z.namelist() if n and not n.endswith("/")]
-        raices = {n.split("/", 1)[0] for n in nombres}
-        quitar = len(raices) == 1 and all("/" in n for n in nombres)
-        base = os.path.realpath(destino)
+        nombres = [n for n in z.namelist() if n and not n.endswith(("/", "\\"))]
+        raices = {n.replace("\\", "/").split("/", 1)[0] for n in nombres}
+        quitar = len(raices) == 1 and all("/" in n.replace("\\", "/") for n in nombres)
         for info in z.infolist():
-            rel = info.filename
+            raw = info.filename.replace("\\", "/")
             if quitar:
-                rel = rel.split("/", 1)[1] if "/" in rel else ""
-            if not rel:
+                raw = raw.split("/", 1)[1] if "/" in raw else ""
+            if not raw or raw.endswith("/"):
                 continue
-            out = os.path.realpath(os.path.join(destino, rel))
-            if not out.startswith(base):
+            out = _ruta_segura(destino, raw)
+            if out is None:
                 continue
-            if info.is_dir():
-                os.makedirs(out, exist_ok=True)
-            else:
-                os.makedirs(os.path.dirname(out), exist_ok=True)
-                with z.open(info) as src, open(out, "wb") as dst:
-                    shutil.copyfileobj(src, dst)
+            # No convertir enlaces simbólicos del ZIP en archivos del sistema.
+            modo = (info.external_attr >> 16) & 0o170000
+            if modo == 0o120000:
+                continue
+            os.makedirs(os.path.dirname(out), exist_ok=True)
+            with z.open(info) as src, open(out, "wb") as dst:
+                shutil.copyfileobj(src, dst)
 
 
 def _extraer_7z(arc_path, destino):
-    """Extrae .7z a destino (aplanado si hay una sola carpeta raiz).
-    Orden: py7zr -> 7z.exe en PATH o BASE/tools.
-    """
-    base = os.path.realpath(destino)
+    """Extrae .7z a un temporal, aplana una raíz y copia solo rutas seguras."""
     os.makedirs(destino, exist_ok=True)
 
     def _aplanar_desde(tmp):
@@ -80,82 +106,86 @@ def _extraer_7z(arc_path, destino):
         if len(entries) == 1 and os.path.isdir(os.path.join(tmp, entries[0])):
             raiz = os.path.join(tmp, entries[0])
         src_root = raiz or tmp
-        for root, dirs, files in os.walk(src_root):
+        for root, dirs, files in os.walk(src_root, followlinks=False):
+            dirs[:] = [d for d in dirs if not os.path.islink(os.path.join(root, d))]
             for f in files:
                 full = os.path.join(root, f)
+                if os.path.islink(full) or not os.path.isfile(full):
+                    continue
                 rel = os.path.relpath(full, src_root)
-                out = os.path.realpath(os.path.join(destino, rel))
-                if not out.startswith(base):
+                out = _ruta_segura(destino, rel)
+                if out is None:
                     continue
                 os.makedirs(os.path.dirname(out), exist_ok=True)
                 shutil.move(full, out)
-
-    try:
-        import py7zr  # type: ignore
-        tmp = destino + ".__7z_tmp"
-        if os.path.isdir(tmp):
-            shutil.rmtree(tmp, ignore_errors=True)
-        os.makedirs(tmp, exist_ok=True)
-        with py7zr.SevenZipFile(arc_path, mode="r") as z:
-            z.extractall(path=tmp)
-        _aplanar_desde(tmp)
-        shutil.rmtree(tmp, ignore_errors=True)
-        return
-    except ImportError:
-        pass
-    except Exception as e:
-        raise RuntimeError(f"py7zr fallo: {e}") from e
-
-    ok, exe = soporte_7z()
-    if not ok or not exe or exe == "py7zr":
-        # re-buscar 7z si py7zr no estaba
-        candidatos = ["7z", "7z.exe", "7za", "7za.exe",
-                      os.path.join(BASE, "tools", "7z.exe"),
-                      os.path.join(BASE, "tools", "7za.exe")]
-        exe = None
-        for c in candidatos:
-            if os.path.isabs(c) and os.path.exists(c):
-                exe = c
-                break
-            found = shutil.which(c)
-            if found:
-                exe = found
-                break
-    if not exe or exe == "py7zr":
-        raise RuntimeError(
-            "No hay soporte .7z: pip install py7zr o pone 7z.exe en PATH / tools/"
-        )
 
     tmp = destino + ".__7z_tmp"
     if os.path.isdir(tmp):
         shutil.rmtree(tmp, ignore_errors=True)
     os.makedirs(tmp, exist_ok=True)
-    r = subprocess.run(
-        [exe, "x", "-y", f"-o{tmp}", arc_path],
-        capture_output=True, text=True, timeout=600,
-    )
-    if r.returncode != 0:
+    try:
+        try:
+            import py7zr
+        except ImportError:
+            py7zr = None
+        if py7zr is not None:
+            with py7zr.SevenZipFile(arc_path, mode="r") as z:
+                # Validar todos los nombres antes de extraer: el temporal también
+                # debe quedar protegido frente a miembros con rutas externas.
+                nombres = [
+                    name.rstrip("/\\\\") for name in z.getnames()
+                    if name.rstrip("/\\\\")
+                ]
+                if any(_ruta_segura(tmp, name) is None for name in nombres):
+                    raise RuntimeError("El archivo 7z contiene rutas no permitidas")
+                z.extractall(path=tmp)
+        else:
+            candidatos = ("7z", "7z.exe", "7za", "7za.exe",
+                          os.path.join(BASE, "tools", "7z.exe"),
+                          os.path.join(BASE, "tools", "7za.exe"))
+            exe = next((c if os.path.isabs(c) and os.path.isfile(c) else shutil.which(c)
+                        for c in candidatos
+                        if (os.path.isabs(c) and os.path.isfile(c)) or shutil.which(c)), None)
+            if not exe:
+                raise RuntimeError(
+                    "No hay soporte .7z: instala py7zr o coloca 7z.exe en PATH / tools/"
+                )
+            r = subprocess.run(
+                [exe, "x", "-y", f"-o{tmp}", arc_path],
+                capture_output=True, text=True, timeout=600,
+            )
+            if r.returncode != 0:
+                raise RuntimeError(
+                    f"7z fallo ({r.returncode}): {(r.stderr or r.stdout or '')[:120]}"
+                )
+        _aplanar_desde(tmp)
+    finally:
         shutil.rmtree(tmp, ignore_errors=True)
-        raise RuntimeError(f"7z fallo ({r.returncode}): {(r.stderr or r.stdout or '')[:120]}")
-    _aplanar_desde(tmp)
-    shutil.rmtree(tmp, ignore_errors=True)
 
 
 def _extraer_archivo(path, destino_fijo, carpeta, nombre):
+    """
+    Instala un archivo descargado y devuelve la ruta que realmente quedó lista.
+    El comprimido solo se elimina después de una extracción correcta.
+    """
     low = path.lower()
-    if low.endswith(".zip"):
-        if destino_fijo:
-            _extraer_plano(path, destino_fijo)
-        else:
-            dest_dir = os.path.join(carpeta, nombre)
-            os.makedirs(dest_dir, exist_ok=True)
-            zipfile.ZipFile(path).extractall(dest_dir)
-        os.remove(path)
-    elif low.endswith(".7z"):
+    if low.endswith((".zip", ".7z")):
         dest = destino_fijo or os.path.join(carpeta, nombre)
-        _extraer_7z(path, dest)
+        if low.endswith(".zip"):
+            _extraer_plano(path, dest)
+        else:
+            _extraer_7z(path, dest)
+        # No informar éxito si la extracción no produjo ningún archivo.
+        contiene_archivos = any(
+            os.path.isfile(os.path.join(root, name))
+            for root, _, files in os.walk(dest)
+            for name in files
+        )
+        if not contiene_archivos:
+            raise RuntimeError("El archivo se extrajo, pero no contiene archivos instalables")
         os.remove(path)
-
+        return dest
+    return path
 
 def trabajador():
     while True:
@@ -199,12 +229,13 @@ def trabajador():
                             f.write(bloque)
                             item["hecho"] += len(bloque)
                 os.replace(tmp, dest)
-                if dest.lower().endswith((".zip", ".7z")):
-                    try:
-                        _extraer_archivo(dest, destino_fijo, carpeta, item["nombre"])
-                    except Exception as e:
-                        item["error"] = f"No se pudo extraer: {str(e)[:70]}"
-                item["listos"].append(dest)
+                # La tarea solo avanza cuando el archivo está descargado e,
+                # si corresponde, extraído correctamente. Si falla la extracción,
+                # el error llega al manejador principal y no se marca como listo.
+                ruta_lista = _extraer_archivo(
+                    dest, destino_fijo, carpeta, item["nombre"]
+                )
+                item["listos"].append(ruta_lista)
             item["estado"] = "listo"
         except InterruptedError:
             pass
@@ -214,7 +245,18 @@ def trabajador():
 
 
 def agregar_enlaces(texto, sistema, nombre=None, destino=None):
-    urls = [l.strip() for l in texto.splitlines() if l.strip().lower().startswith(("http://", "https://"))]
+    # Aceptar exclusivamente HTTP(S); nunca descargar rutas locales ni otros esquemas.
+    urls = []
+    for linea in texto.splitlines():
+        url = linea.strip()
+        if not url:
+            continue
+        try:
+            esquema = urllib.parse.urlparse(url).scheme.lower()
+        except Exception:
+            continue
+        if esquema in ("http", "https"):
+            urls.append(url)
     if not urls:
         return False
     nombre = nombre or os.path.splitext(nombre_archivo(urls[0], 0))[0]

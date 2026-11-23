@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 
 NOMBRE = "Mi Consola"
-VERSION = "5.5.1-unificado"
+VERSION = "5.6.0-console"
 
 BASE = os.environ.get("MI_CONSOLA_BASE", r"D:\Emulacion")
 

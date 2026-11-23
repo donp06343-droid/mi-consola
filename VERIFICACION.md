@@ -39,3 +39,22 @@ Patrones en store.py. Nombres de .exe en EMU_DEFECTO: NO VERIFICADOS.
 **Probado:** sintaxis Python. **NO probado** con EA App / Ubisoft Connect reales en Windows.
 
 Battle.net e itch.io: NO IMPLEMENTADOS.
+
+
+## Integración Mi Consola 5.6.0-console
+
+Cambios incorporados en la rama `consola-unificada`:
+- Se incorporó `cargar_cfg()` a `library.py` para corregir el import requerido por `main.py`.
+- Se integraron mejoras de descarga: solo HTTP/HTTPS, nombres de archivo seguros, extracción ZIP/7z validada, manejo correcto de fallos y registro de la ruta extraída.
+- Se añadió una vista Estado con CPU/RAM/almacenamiento cuando psutil está disponible, detección de emuladores y métricas de biblioteca.
+- Se añadieron estadísticas locales de lanzamientos y tiempo de ejecución. No se transmiten.
+- Se añadieron pestañas clicables y una vista Ajustes para abrir carpetas y registrar carpetas adicionales de juegos de PC.
+- Se añadió psutil a requirements.txt; el panel conserva fallback parcial si no está instalado.
+- La tienda mantiene un catálogo curado de software libre/gratuito. No equivale a 100.000 fichas.
+
+### Verificación pendiente
+- No se ejecutó la aplicación en Windows desde este entorno.
+- No se ejecutaron pruebas de integración con cada emulador.
+- No se verificó el comportamiento de los diálogos de selección de carpeta en el equipo del usuario.
+- Las lecturas de GPU y temperatura no se presentan como valores reales porque no existe una fuente portable configurada.
+- La comprobación estática de sintaxis y el smoke test en Windows siguen pendientes.
