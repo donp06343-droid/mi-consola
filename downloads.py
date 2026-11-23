@@ -153,6 +153,10 @@ def _extraer_7z(arc_path, destino):
 
 
 def _extraer_archivo(path, destino_fijo, carpeta, nombre):
+    """
+    Instala un archivo descargado y devuelve la ruta que realmente quedó lista.
+    El comprimido solo se elimina después de una extracción correcta.
+    """
     low = path.lower()
     if low.endswith((".zip", ".7z")):
         dest = destino_fijo or os.path.join(carpeta, nombre)
@@ -160,7 +164,17 @@ def _extraer_archivo(path, destino_fijo, carpeta, nombre):
             _extraer_plano(path, dest)
         else:
             _extraer_7z(path, dest)
+        # No informar éxito si la extracción no produjo ningún archivo.
+        contiene_archivos = any(
+            os.path.isfile(os.path.join(root, name))
+            for root, _, files in os.walk(dest)
+            for name in files
+        )
+        if not contiene_archivos:
+            raise RuntimeError("El archivo se extrajo, pero no contiene archivos instalables")
         os.remove(path)
+        return dest
+    return path
 
 def trabajador():
     while True:
@@ -204,12 +218,13 @@ def trabajador():
                             f.write(bloque)
                             item["hecho"] += len(bloque)
                 os.replace(tmp, dest)
-                if dest.lower().endswith((".zip", ".7z")):
-                    try:
-                        _extraer_archivo(dest, destino_fijo, carpeta, item["nombre"])
-                    except Exception as e:
-                        item["error"] = f"No se pudo extraer: {str(e)[:70]}"
-                item["listos"].append(dest)
+                # La tarea solo avanza cuando el archivo está descargado e,
+                # si corresponde, extraído correctamente. Si falla la extracción,
+                # el error llega al manejador principal y no se marca como listo.
+                ruta_lista = _extraer_archivo(
+                    dest, destino_fijo, carpeta, item["nombre"]
+                )
+                item["listos"].append(ruta_lista)
             item["estado"] = "listo"
         except InterruptedError:
             pass
