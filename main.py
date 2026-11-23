@@ -470,7 +470,7 @@ def main():
             txt(f"Gamepad x{len(joysticks)}", f_mini, VERDE, 1040, 28)
         else:
             txt("Sin gamepad", f_mini, SUAVE, 1040, 28)
-        txt("Spotify", f_mini, (30, 215, 96), 920, 28)
+        txt("Spotify", f_mini, (30, 215, 96), 950, 28)
         nav_tabs = [
             (390, 475, "INICIO", "inicio"),
             (480, 565, "TIENDA", "tienda"),
