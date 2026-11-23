@@ -30,6 +30,7 @@ from controls import (
 from ui.stars import Estrellas
 from ui.cards import dibujar_tarjeta
 from system_status import obtener_estado_pc, lista_estado_emuladores
+from stats import resumen_estadisticas
 
 
 def mb(b):
@@ -104,6 +105,7 @@ def main():
     portadas_cache = {}
     t_portadas = 0
     estado_pc, emus_estado, t_estado = {}, [], 0
+    stats_resumen = {"lanzamientos": 0, "segundos": 0, "juegos": 0, "top": []}
 
     def txt(s, f, c, x, y, centro=False):
         im = f.render(str(s), True, c)
@@ -300,13 +302,14 @@ def main():
                     sel = min(len(juegos_filtrados) - 1, sel + COLS)
                 if tecla == "ok":
                     j = juegos_filtrados[sel]
-                    msg = jugar(j[0], j[2], cfg)
+                    msg = jugar(j[0], j[2], cfg, j[1])
                     if msg:
                         set_aviso(msg)
             elif vista == "estado":
             if ahora - t_estado > 2.0:
                 estado_pc = obtener_estado_pc()
                 emus_estado = lista_estado_emuladores(cfg)
+                stats_resumen = resumen_estadisticas()
                 t_estado = ahora
 
             txt("Estado del equipo", f_tit, TEXTO, 55, 82)
@@ -358,6 +361,17 @@ def main():
             activos = sum(1 for d in cola if d.get("estado") in ("en cola", "bajando"))
             completadas = sum(1 for d in cola if d.get("estado") == "listo")
             txt(f"Descargas: {activos} activas · {completadas} completadas", f_mini, SUAVE, 60, 475)
+            horas = stats_resumen.get("segundos", 0) / 3600
+            txt(f"ESTADISTICAS DE JUEGO: {stats_resumen.get('lanzamientos', 0)} lanzamientos · "
+                f"{stats_resumen.get('juegos', 0)} juegos iniciados · {horas:.1f} horas registradas",
+                f_peq, CIAN, 60, 515)
+            top_juegos = stats_resumen.get("top", [])
+            if top_juegos:
+                txt("MAS JUGADOS POR TIEMPO", f_mini, DORADO, 60, 550)
+                for i, juego in enumerate(top_juegos[:3]):
+                    minutos = int(float(juego.get("segundos", 0)) // 60)
+                    txt(f"{i + 1}. {juego.get('nombre', 'Juego')[:30]} · {minutos} min",
+                        f_mini, SUAVE, 60, 574 + i * 22)
             pie = "E / Esc volver   ·   R re-escanear biblioteca   ·   T tienda   ·   C controles"
         elif vista == "tienda":
                 if tecla == "a":
