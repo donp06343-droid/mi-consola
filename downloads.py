@@ -17,7 +17,14 @@ cola = []
 
 
 def nombre_archivo(url, n):
-    return os.path.basename(urllib.parse.unquote(urllib.parse.urlparse(url).path)) or f"archivo_{n}"
+    """Obtiene un nombre local seguro a partir de una URL no confiable."""
+    raw = urllib.parse.unquote(urllib.parse.urlparse(url).path)
+    nombre = os.path.basename(raw.replace("\\", "/"))
+    if nombre in ("", ".", ".."):
+        nombre = f"archivo_{n}"
+    # Evitar separadores y caracteres no válidos en nombres de Windows.
+    nombre = re.sub(r'[<>:"/\\\\|?*\\x00-\\x1f]', "_", nombre).strip(" .")
+    return nombre or f"archivo_{n}"
 
 
 def soporte_7z():
@@ -234,7 +241,18 @@ def trabajador():
 
 
 def agregar_enlaces(texto, sistema, nombre=None, destino=None):
-    urls = [l.strip() for l in texto.splitlines() if l.strip().lower().startswith(("http://", "https://"))]
+    # Aceptar exclusivamente HTTP(S); nunca descargar rutas locales ni otros esquemas.
+    urls = []
+    for linea in texto.splitlines():
+        url = linea.strip()
+        if not url:
+            continue
+        try:
+            esquema = urllib.parse.urlparse(url).scheme.lower()
+        except Exception:
+            continue
+        if esquema in ("http", "https"):
+            urls.append(url)
     if not urls:
         return False
     nombre = nombre or os.path.splitext(nombre_archivo(urls[0], 0))[0]
